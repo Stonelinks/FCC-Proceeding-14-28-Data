@@ -9,12 +9,9 @@ var searchBaseUrl = 'http://apps.fcc.gov/ecfs/comment_search/paginate?pageSize=1
 var searchPageNumber = 0;
 
 var documentBaseURL = 'http://apps.fcc.gov/ecfs/document/view?id=7521104360';
-var id = 7521011110;
-
-var pass = function() {};
+var id = 7521013222;
 
 var download = function(uri, filename, callback) {
-  callback = callback || pass;
   if (fs.existsSync(filename)) {
     console.log(filename + ' exists');
     callback();
@@ -28,7 +25,7 @@ var download = function(uri, filename, callback) {
           callback();
         }
         else {
-          console.log('downloading ' + uri + ' to ' + filename);
+          console.log('downloading ' + filename);
           request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
         }
       }
@@ -45,6 +42,13 @@ var downloadDocument = function(id, callback) {
   download(documentURL, 'documents/' + id + '.pdf', callback);
 };
 
-async.eachLimit(_.range(id, id + 10000), 6, downloadDocument, function(err, results) {
-  console.log('done');
-});
+var downloadDocuments = function(start, end, callback) {
+  start = start || id;
+  end = end || start + 10000;
+  callback = callback || function(err, results) {
+    console.log('done downloading documents ' + start + '-' + end);
+  };
+  async.eachLimit(_.range(start, end), 4, downloadDocument, callback);
+};
+
+downloadDocuments();
