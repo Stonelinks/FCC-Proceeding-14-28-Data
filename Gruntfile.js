@@ -17,6 +17,16 @@ module.exports = function(grunt) {
         cwd: 'documents/',
         src: ['**/*'],
         dest: '.'
+      },
+      
+      filings: {
+        options: {
+          mode: 'gzip',
+          archive: 'filings.json.gz'
+        },
+        expand: true,
+        src: ['filings.json'],
+        dest: '.'
       }
     }
   });
