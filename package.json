@@ -1,0 +1,32 @@
+{
+  "name": "FCC-Proceeding-14-28-Data",
+  "version": "0.0.0",
+  "description": "Keep a record of what people have to say about net neutrality on the FCC's ECFS",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Stonelinks/FCC-Proceeding-14-28-Data.git"
+  },
+  "keywords": [
+    "FCC",
+    "net",
+    "neutrality",
+    "14-28",
+    "proceeding",
+    "14-28"
+  ],
+  "author": "Lucas Doyle <lucas.p.doyle@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Stonelinks/FCC-Proceeding-14-28-Data/issues"
+  },
+  "homepage": "https://github.com/Stonelinks/FCC-Proceeding-14-28-Data",
+  "dependencies": {
+    "async": "^0.9.0",
+    "cheerio": "^0.17.0",
+    "lodash": "^2.4.1",
+    "request": "^2.36.0"
+  }
+}
