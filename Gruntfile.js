@@ -4,6 +4,7 @@ module.exports = function(grunt) {
 
   require('time-grunt')(grunt);
   require('load-grunt-tasks')(grunt);
+  var scraper = require('./scraper');
 
   grunt.initConfig({
     compress: {
@@ -20,7 +21,8 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.registerTask('default', [
-    'compress'
-  ]);
+  grunt.registerTask('documents', function() {
+    var done = this.async();
+    scraper.downloadDocuments(grunt.option('start'), grunt.option('end'), done);
+  });
 };

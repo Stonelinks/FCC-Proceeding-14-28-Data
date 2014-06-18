@@ -1,3 +1,5 @@
+'use strict';
+
 var fs = require('fs');
 var request = require('request');
 var cheerio = require('cheerio');
@@ -9,10 +11,10 @@ var searchBaseUrl = 'http://apps.fcc.gov/ecfs/comment_search/paginate?pageSize=1
 var searchPageNumber = 0;
 
 var documentBaseURL = 'http://apps.fcc.gov/ecfs/document/view?id=7521104360';
-var id = 7521013541;
+var id = 7521022431;
 var firstDocument;
 
-var download = function(uri, filename, callback) {
+var download = module.exports.download = function(uri, filename, callback) {
   if (fs.existsSync(filename)) {
     console.log(filename + ' exists');
     callback();
@@ -37,7 +39,7 @@ var download = function(uri, filename, callback) {
   }
 };
 
-var downloadDocument = function(id, callback) {
+var downloadDocument = module.exports.downloadDocument = function(id, callback) {
   var documentURL = url.resolve(documentBaseURL, url.format({
     query: {
       id: id
@@ -46,14 +48,13 @@ var downloadDocument = function(id, callback) {
   download(documentURL, 'documents/' + id + '.pdf', callback);
 };
 
-var downloadDocuments = function(start, end, callback) {
+var downloadDocuments = module.exports.downloadDocuments = function(start, end, callback) {
   start = start || id;
   end = end || start + 1000000;
+  console.log('downloading documents ' + start + '-' + end);
   callback = callback || function(err, results) {
     console.log('done downloading documents ' + start + '-' + end);
     console.log('first document was ' + firstDocument);
   };
   async.eachLimit(_.range(start, end), 4, downloadDocument, callback);
 };
-
-downloadDocuments();
