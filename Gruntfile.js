@@ -18,7 +18,7 @@ module.exports = function(grunt) {
         src: ['**/*'],
         dest: '.'
       },
-      
+
       filings: {
         options: {
           mode: 'gzip',

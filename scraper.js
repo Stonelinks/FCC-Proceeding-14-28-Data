@@ -37,12 +37,16 @@ var download = module.exports.download = function(uri, filename, callback) {
           request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
         }
       }
+      else {
+        console.log('error with ' + filename);
+        callback();
+      }
     });
   }
 };
 
 var documentBaseURL = 'http://apps.fcc.gov/ecfs/document/view?id=7521104360';
-var id = 7521053248;
+var id = 7521063602;
 var firstDocument;
 var downloadDocument = module.exports.downloadDocument = function(id, callback) {
   var documentURL = url.resolve(documentBaseURL, url.format({
@@ -61,7 +65,7 @@ var downloadDocuments = module.exports.downloadDocuments = function(start, end, 
     console.log('done downloading documents ' + start + '-' + end);
     console.log('first document was ' + firstDocument);
   };
-  async.eachLimit(_.range(start, end), 10, downloadDocument, callback);
+  async.eachLimit(_.range(start, end), 3, downloadDocument, callback);
 };
 
 var filingDetailBaseURL = 'http://apps.fcc.gov/ecfs/comment/view';
@@ -98,6 +102,10 @@ var processFiling = module.exports.processFiling = function(id, callback) {
           downloadDocument(db[id].documentID, callback);
         }
       }
+      else {
+        console.log('error with filing ' + id);
+        callback();
+      }
     });
   }
 };
@@ -126,6 +134,10 @@ var processFilingPage = module.exports.processFilingPage = function(index, callb
         console.log('done page ' + index);
         callback();
       });
+    }
+    else {
+      console.log('error with filing page ' + index);
+      callback();
     }
   });
 };
