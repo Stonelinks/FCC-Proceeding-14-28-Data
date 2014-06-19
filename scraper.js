@@ -35,7 +35,7 @@ var download = module.exports.download = function(uri, filename, callback) {
             firstDocument = filename;
           }
           console.log('saving ' + filename);
-          fs.writeFile(filename, html, function() {
+          request(uri).pipe(fs.createWriteStream(filename)).on('close', function() {
             callback(null);
           });
         }
@@ -49,7 +49,7 @@ var download = module.exports.download = function(uri, filename, callback) {
 };
 
 var documentBaseURL = 'http://apps.fcc.gov/ecfs/document/view?id=7521104360';
-var id = 7521063602;
+var id = 7521315311;
 var firstDocument;
 var downloadDocument = module.exports.downloadDocument = function(id, callback) {
   var documentURL = url.resolve(documentBaseURL, url.format({
