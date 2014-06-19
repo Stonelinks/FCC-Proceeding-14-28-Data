@@ -6,7 +6,9 @@ var cheerio = require('cheerio');
 var _ = require('lodash');
 var url = require('url');
 var async = require('async');
+
 var pass = function() {};
+
 var jf = require('jsonfile');
 jf.spaces = 0;
 var dbfile = './filings.json';
@@ -19,27 +21,28 @@ var saveDB = _.throttle(function() {
 var download = module.exports.download = function(uri, filename, callback) {
   if (fs.existsSync(filename)) {
     console.log(filename + ' exists');
-    callback();
+    callback(null);
   }
   else {
     request(uri, function(error, response, html) {
       if (!error) {
-        var $ = cheerio.load(html);
-        if ($('body:contains("The resource you requested does not exist.")').length) {
+        if (html.trim().indexOf('<!DOCTYPE') == 0) {
           console.log(filename + ' does not exist');
-          callback();
+          callback(null);
         }
         else {
           if (firstDocument === undefined) {
             firstDocument = filename;
           }
-          console.log('downloading ' + filename);
-          request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
+          console.log('saving ' + filename);
+          fs.writeFile(filename, html, function() {
+            callback(null);
+          });
         }
       }
       else {
         console.log('error with ' + filename);
-        callback();
+        callback(null);
       }
     });
   }
@@ -54,7 +57,9 @@ var downloadDocument = module.exports.downloadDocument = function(id, callback) 
       id: id
     }
   }));
-  download(documentURL, 'documents/' + id + '.pdf', callback);
+  download(documentURL, 'documents/' + id + '.pdf', function() {
+    callback(null);
+  });
 };
 
 var downloadDocuments = module.exports.downloadDocuments = function(start, end, callback) {
@@ -65,14 +70,18 @@ var downloadDocuments = module.exports.downloadDocuments = function(start, end, 
     console.log('done downloading documents ' + start + '-' + end);
     console.log('first document was ' + firstDocument);
   };
-  async.eachLimit(_.range(start, end), 3, downloadDocument, callback);
+  async.eachLimit(_.range(start, end), 4, downloadDocument, function() {
+    callback(null);
+  });
 };
 
 var filingDetailBaseURL = 'http://apps.fcc.gov/ecfs/comment/view';
 var processFiling = module.exports.processFiling = function(id, callback) {
   if (db.hasOwnProperty(id)) {
     console.log(id + ' exists in db');
-    downloadDocument(db[id].documentID, callback);
+    downloadDocument(db[id].documentID, function() {
+      callback(null);
+    });
   }
   else {
     var filingURL = url.resolve(filingDetailBaseURL, url.format({
@@ -85,7 +94,7 @@ var processFiling = module.exports.processFiling = function(id, callback) {
         var $ = cheerio.load(html);
         if ($('body:contains("The resource you requested does not exist.")').length) {
           console.log(id + ' does not exist');
-          callback();
+          callback(null);
         }
         else {
           db[id] = {
@@ -104,7 +113,7 @@ var processFiling = module.exports.processFiling = function(id, callback) {
       }
       else {
         console.log('error with filing ' + id);
-        callback();
+        callback(null);
       }
     });
   }
@@ -130,14 +139,14 @@ var processFilingPage = module.exports.processFilingPage = function(index, callb
         ids.push(this.parent.attribs.href.split('id=').pop());
       });
 
-      async.eachLimit(ids, 3, processFiling, function(err, results) {
+      async.eachLimit(ids, 4, processFiling, function(err, results) {
         console.log('done page ' + index);
-        callback();
+        callback(null);
       });
     }
     else {
       console.log('error with filing page ' + index);
-      callback();
+      callback(null);
     }
   });
 };
@@ -149,5 +158,7 @@ var processFilingPages = module.exports.processFilingPages = function(start, end
   callback = callback || function(err, results) {
     console.log('done downloading filing pages ' + start + '-' + end);
   };
-  async.eachLimit(_.range(start, end), 1, processFilingPage, callback);
+  async.eachLimit(_.range(start, end), 4, processFilingPage, function() {
+    callback(null);
+  });
 };
