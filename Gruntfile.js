@@ -40,11 +40,6 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.registerTask('documents', function() {
-    var done = this.async();
-    scraper.downloadDocuments(grunt.option('start'), grunt.option('end'), done);
-  });
-
   grunt.registerTask('filings', function() {
     var done = this.async();
     scraper.processFilingPages(grunt.option('start'), grunt.option('end'), done);

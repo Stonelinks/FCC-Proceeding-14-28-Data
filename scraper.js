@@ -48,8 +48,8 @@ var download = module.exports.download = function(uri, filename, callback) {
   }
 };
 
-var documentBaseURL = 'http://apps.fcc.gov/ecfs/document/view?id=7521104360';
-var id = 7521487196;
+var documentBaseURL = 'http://apps.fcc.gov/ecfs/document/view';
+var id = 7521000000;
 var firstDocument;
 var downloadDocument = module.exports.downloadDocument = function(id, callback) {
   var documentURL = url.resolve(documentBaseURL, url.format({
@@ -58,19 +58,6 @@ var downloadDocument = module.exports.downloadDocument = function(id, callback) 
     }
   }));
   download(documentURL, 'documents/' + id + '.pdf', function() {
-    callback(null);
-  });
-};
-
-var downloadDocuments = module.exports.downloadDocuments = function(start, end, callback) {
-  start = start || id;
-  end = end || start + 1000000;
-  console.log('downloading documents ' + start + '-' + end);
-  callback = callback || function(err, results) {
-    console.log('done downloading documents ' + start + '-' + end);
-    console.log('first document was ' + firstDocument);
-  };
-  async.eachLimit(_.range(start, end), 10, downloadDocument, function() {
     callback(null);
   });
 };
