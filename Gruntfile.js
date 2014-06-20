@@ -7,26 +7,35 @@ module.exports = function(grunt) {
   var scraper = require('./scraper');
 
   grunt.initConfig({
+
+    pkg: grunt.file.readJSON('package.json'),
+
     compress: {
       documents: {
         options: {
           mode: 'tgz',
-          archive: 'documents.tar.gz'
+          archive: '<%= pkg.name %>.tar.gz',
+          pretty: true
         },
-        expand: true,
-        cwd: 'documents/',
-        src: ['**/*'],
-        dest: '.'
-      },
+        files: [
+          {
+            src: ['documents/**/*'],
+            dest: '.'
+          },
+          {
+            src: ['filings.json'],
+            dest: '.'
+          }
+        ]
+      }
+    },
 
-      filings: {
+    rsync: {
+      DropboxDeploy: {
         options: {
-          mode: 'gzip',
-          archive: 'filings.json.gz'
-        },
-        expand: true,
-        src: ['filings.json'],
-        dest: '.'
+          src: ['<%= pkg.name %>.tar.gz'],
+          dest: '/home/ld/Dropbox/Public/'
+        }
       }
     }
   });
@@ -40,4 +49,6 @@ module.exports = function(grunt) {
     var done = this.async();
     scraper.processFilingPages(grunt.option('start'), grunt.option('end'), done);
   });
+
+  grunt.registerTask('deploy', ['compress', 'rsync']);
 };
