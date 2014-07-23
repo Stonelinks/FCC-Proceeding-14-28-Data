@@ -9,14 +9,7 @@ var async = require('async');
 
 var pass = function() {};
 
-var jf = require('jsonfile');
-jf.spaces = 0;
-var dbfile = './filings.json';
-var db = jf.readFileSync(dbfile);
-var saveDB = _.throttle(function() {
-  console.log('saving db');
-  jf.writeFileSync(dbfile, db);
-}, 2000);
+var db = require('./db');
 
 var download = module.exports.download = function(uri, filename, callback) {
   if (fs.existsSync(filename)) {
@@ -31,9 +24,6 @@ var download = module.exports.download = function(uri, filename, callback) {
           callback(null);
         }
         else {
-          if (firstDocument === undefined) {
-            firstDocument = filename;
-          }
           console.log('saving ' + filename);
           request(uri).pipe(fs.createWriteStream(filename)).on('close', function() {
             callback(null);
@@ -49,24 +39,22 @@ var download = module.exports.download = function(uri, filename, callback) {
 };
 
 var documentBaseURL = 'http://apps.fcc.gov/ecfs/document/view';
-var id = 7521000000;
-var firstDocument;
 var downloadDocument = module.exports.downloadDocument = function(id, callback) {
   var documentURL = url.resolve(documentBaseURL, url.format({
     query: {
       id: id
     }
   }));
-  download(documentURL, 'documents/' + id + '.pdf', function() {
+  download(documentURL, db.documentsFolder + '/' + id + '.pdf', function() {
     callback(null);
   });
 };
 
 var filingDetailBaseURL = 'http://apps.fcc.gov/ecfs/comment/view';
 var processFiling = module.exports.processFiling = function(id, callback) {
-  if (db.hasOwnProperty(id)) {
+  if (db.has(id)) {
     console.log(id + ' exists in db');
-    downloadDocument(db[id].documentID, function() {
+    downloadDocument(db.get(id).documentID, function() {
       callback(null);
     });
   }
@@ -84,7 +72,8 @@ var processFiling = module.exports.processFiling = function(id, callback) {
           callback(null);
         }
         else {
-          db[id] = {
+          console.log('adding ' + id + ' to db');
+          db.set(id, {
             name: $('#applicant').text().trim(),
             documentID: $('[id="documents.link"] > a').attr('href').split('id=').pop(),
             type: $('[id="type.typeDescription"]').text().trim().toLowerCase(),
@@ -92,10 +81,8 @@ var processFiling = module.exports.processFiling = function(id, callback) {
             received: $('#dateRcpt').text().trim(),
             disseminated: $('#dateDisseminated').text().trim(),
             address: $('#address').text().trim()
-          };
-          console.log('adding ' + id + ' to db');
-          saveDB();
-          downloadDocument(db[id].documentID, callback);
+          });
+          downloadDocument(db.get(id).documentID, callback);
         }
       }
       else {
