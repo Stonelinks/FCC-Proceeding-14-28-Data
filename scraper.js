@@ -1,11 +1,12 @@
 'use strict';
 
-var fs = require('fs');
+var fs = require('fs-extra');
 var request = require('request');
 var cheerio = require('cheerio');
 var _ = require('lodash');
 var url = require('url');
 var async = require('async');
+var path = require('path');
 
 var pass = function() {};
 
@@ -25,8 +26,10 @@ var download = module.exports.download = function(uri, filename, callback) {
         }
         else {
           console.log('saving ' + filename);
-          request(uri).pipe(fs.createWriteStream(filename)).on('close', function() {
-            callback(null);
+          fs.ensureDir(path.dirname(filename), function() {
+            request(uri).pipe(fs.createWriteStream(filename)).on('close', function() {
+              callback(null);
+            });
           });
         }
       }
@@ -39,13 +42,13 @@ var download = module.exports.download = function(uri, filename, callback) {
 };
 
 var documentBaseURL = 'http://apps.fcc.gov/ecfs/document/view';
-var downloadDocument = module.exports.downloadDocument = function(id, callback) {
+var downloadDocumentForEntry = module.exports.downloadDocumentForEntry = function(entry, callback) {
   var documentURL = url.resolve(documentBaseURL, url.format({
     query: {
-      id: id
+      id: entry.documentID
     }
   }));
-  download(documentURL, db.documentsFolder + '/' + id + '.pdf', function() {
+  download(documentURL, entry.documentPath, function() {
     callback(null);
   });
 };
@@ -54,7 +57,7 @@ var filingDetailBaseURL = 'http://apps.fcc.gov/ecfs/comment/view';
 var processFiling = module.exports.processFiling = function(id, callback) {
   if (db.has(id)) {
     console.log(id + ' exists in db');
-    downloadDocument(db.get(id).documentID, function() {
+    downloadDocumentForEntry(db.get(id), function() {
       callback(null);
     });
   }
@@ -73,16 +76,19 @@ var processFiling = module.exports.processFiling = function(id, callback) {
         }
         else {
           console.log('adding ' + id + ' to db');
+          var disseminated = $('#dateDisseminated').text().trim();
+          var documentID = $('[id="documents.link"] > a').attr('href').split('id=').pop();
           db.set(id, {
             name: $('#applicant').text().trim(),
-            documentID: $('[id="documents.link"] > a').attr('href').split('id=').pop(),
+            documentID: documentID,
             type: $('[id="type.typeDescription"]').text().trim().toLowerCase(),
             exParte: $('#exParte').text().trim(),
             received: $('#dateRcpt').text().trim(),
-            disseminated: $('#dateDisseminated').text().trim(),
-            address: $('#address').text().trim()
+            disseminated: disseminated,
+            address: $('#address').text().trim(),
+            documentPath: db.documentsFolder + '/' + moment(entry.disseminated).format('MMMM-Do-YYYY') + documentID + '.pdf'
           });
-          downloadDocument(db.get(id).documentID, callback);
+          downloadDocumentForEntry(db.get(id), callback);
         }
       }
       else {
