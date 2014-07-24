@@ -7,6 +7,7 @@ var _ = require('lodash');
 var url = require('url');
 var async = require('async');
 var path = require('path');
+var moment = require('moment');
 
 var pass = function() {};
 
@@ -86,7 +87,7 @@ var processFiling = module.exports.processFiling = function(id, callback) {
             received: $('#dateRcpt').text().trim(),
             disseminated: disseminated,
             address: $('#address').text().trim(),
-            documentPath: db.documentsFolder + '/' + moment(entry.disseminated).format('MMMM-Do-YYYY') + documentID + '.pdf'
+            documentPath: db.documentsFolder + '/' + moment(disseminated).format('MMMM-Do-YYYY') + '/' + documentID + '.pdf'
           });
           downloadDocumentForEntry(db.get(id), callback);
         }

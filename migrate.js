@@ -50,11 +50,23 @@ var moveFile = function(id, callback) {
 var fixDocumentPath = function(id, callback) {
   setTimeout(function() {
     var entry = db.get(id);
-    entry.documentPath = db.documentsFolder + '/' + moment(entry.disseminated).format('MMMM-Do-YYYY') + '/' + entry.documentID + '.pdf';
-    db.set(id, entry);
-    count++;
-    notification();
-    callback(null);
+    var documentPath = db.documentsFolder + '/' + moment(entry.disseminated).format('MMMM-Do-YYYY') + '/' + entry.documentID + '.pdf';
+    if (fs.existsSync(documentPath)) {
+      count++;
+      notification();
+      callback(null);
+    }
+    else {
+      fs.move(entry.documentPath, documentPath, function() {
+
+        entry.documentPath = documentPath;
+        db.set(id, entry);
+
+        count++;
+        notification();
+        callback(null);
+      });
+    }
   }, 200);
 };
 
