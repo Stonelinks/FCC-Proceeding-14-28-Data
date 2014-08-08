@@ -22,7 +22,7 @@ fs.mkdirs(newDocs);
 var count = 0;
 var total = db.keys().length;
 var notification = _.throttle(function() {
-  console.log('progress ' + count + '/' + total + ' (' + (100.0 * count / total) + '%)');
+  console.log('progress ' + count + '/' + total + ' (' + (100.0 * count / total).toFixed(2) + '%)');
 }, 400);
 
 var moveFile = function(id, callback) {
