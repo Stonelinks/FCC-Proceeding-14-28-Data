@@ -5,11 +5,10 @@ var _ = require('lodash');
 var moment = require('moment');
 var path = require('path');
 var async = require('async');
-
-var extract = require('pdf-text-extract');
+var inspect = require('eyes').inspector({maxLength: 20000});
 var pdf_extract = require('pdf-extract');
 
-var pdf_extract_options = {
+var ocr_pdf_extract_options = {
   type: 'ocr', // (required), perform ocr to get the text within the scanned image
   ocr_flags: [
     '-psm 1',       // automatically detect page orientation
@@ -17,69 +16,100 @@ var pdf_extract_options = {
   ]
 };
 
-var textFolder = db.documentsFolder + '-txt';
-if (fs.existsSync(textFolder)) {
-  fs.removeSync(textFolder);
-}
-fs.mkdirs(textFolder);
+var text_pdf_extract_options = {
+  type: 'text'
+};
+
+// make a backup of everything before trying to do anything
+// console.log('running a backup');
+// console.log(require('exec-sync')('grunt backup'));
+// console.log('done');
+
+var textFolder = db.documentsFolderText;
+// if (fs.existsSync(textFolder)) {
+  // fs.removeSync(textFolder);
+// }
+// fs.mkdirs(textFolder);
 
 var count = 0;
 var total = db.keys().length;
+var last;
 var notification = _.throttle(function() {
-  console.log('progress ' + count + '/' + total + ' (' + (100.0 * count / total).toFixed(2) + '%)');
+  console.log('progress ' + count + '/' + total + ' (' + (100.0 * count / total).toFixed(2) + '%), last ' + last);
 }, 400);
 
 var extractTextFromDocument = function(id, callback) {
-  setTimeout(function() {
-    var entry = db.get(id);
-    var documentPath = entry.documentPath;
-    var documentPathText = textFolder + '/' + moment(entry.disseminated).format('MMMM-Do-YYYY') + '/' + entry.documentID + '.txt';
+  last = id;
+  var entry = db.get(id);
+  var documentPath = entry.documentPath;
+  var documentPathText = textFolder + '/' + moment(entry.disseminated).format('MMMM-Do-YYYY') + '/' + entry.documentID + '.txt';
 
-    entry.documentPathText = documentPathText;
-    db.set(id, entry);
+  var _done = function() {
+    count++;
+    notification();
+    callback(null);
+  };
 
-    var _done = function() {
-      count++;
-      notification();
-      callback(null);
-    };
+  var _err = function(err) {
+    if (err) {
+      console.dir(err);
+    }
+    _done();
+  };
 
-    console.log('extracting text from ' + documentPath);
-    extract(documentPath, function(err, pages) {
+  var _write = function(text) {
+    fs.ensureDir(path.dirname(documentPathText), function() {
+      fs.writeFile(documentPathText, text, _done);
+    });
+  };
 
-      var _err = function(err) {
+  fs.exists(documentPathText, function(exists) {
+    if (exists) {
+      _done();
+    }
+    else if (fs.existsSync(documentPath) && fs.readFileSync(documentPath, 'utf8') !== '') {
+      console.log('extracting text from ' + documentPath);
+
+      var text_processor = pdf_extract(documentPath, text_pdf_extract_options, function(err, pages) {
+
+        // inspect(pages, 'extracted text pages');
         if (err) {
           console.dir(err);
-          _done();
         }
-      };
-      _err(err);
+        else if (pages.length) {
+          _write(pages.join('\n\n'));
+        }
+        else {
+          console.log('trying ocr on ' + documentPath);
 
-      var _write = function(text) {
-        fs.ensureDir(path.dirname(documentPathText), function() {
-          fs.writeFile(documentPathText, text, _done);
-        });
-      };
-
-      if (pages.length) {
-        _write(pages.join('\n\n'));
-      }
-      else {
-        console.log('trying ocr on ' + documentPath);
-        var processor = pdf_extract(documentPath, pdf_extract_options, _err);
-        processor.on('complete', function(data) {
-          if (data.text_pages.length) {
-            _write(data.text_pages.join('\n\n'));
-          }
-          else {
-            _done();
-          }
-        });
-      }
-    });
-  }, 200);
+          var pdf_processor = pdf_extract(documentPath, ocr_pdf_extract_options, function(err, pages) {
+            if (err) {
+              console.dir(err);
+            }
+            else if (pages.length) {
+              _write(pages.join('\n\n'));
+            }
+            else {
+              _done();
+            }
+          });
+          text_processor.on('error', _err);
+        }
+      });
+      text_processor.on('error', _err);
+    }
+    else {
+      _done();
+    }
+  });
 };
 
-async.eachLimit(db.keys(), 7, extractTextFromDocument, function() {
+// db.forceSave();
+
+var keys = db.keys().sort();
+// count = 18331;
+// async.eachLimit(keys.slice(keys.indexOf('6017857697')), 1, extractTextFromDocument, function() {
+async.eachLimit(keys, 13, extractTextFromDocument, function() {
+  // db.forceSave();
   console.log('done');
 });

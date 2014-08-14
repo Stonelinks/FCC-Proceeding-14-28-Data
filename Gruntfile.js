@@ -22,7 +22,11 @@ module.exports = function(grunt) {
         },
         files: [
           {
-            src: [db.documentsFolder + '/**/*'],
+            src: [db.documentsFolderPdf + '/**/*'],
+            dest: '.'
+          },
+          {
+            src: [db.documentsFolderText + '/**/*'],
             dest: '.'
           },
           {

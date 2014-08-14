@@ -77,19 +77,30 @@ var processFiling = module.exports.processFiling = function(id, callback) {
         }
         else {
           console.log('adding ' + id + ' to db');
-          var disseminated = $('#dateDisseminated').text().trim();
-          var documentID = $('[id="documents.link"] > a').attr('href').split('id=').pop();
-          db.set(id, {
-            name: $('#applicant').text().trim(),
-            documentID: documentID,
-            type: $('[id="type.typeDescription"]').text().trim().toLowerCase(),
-            exParte: $('#exParte').text().trim(),
-            received: $('#dateRcpt').text().trim(),
-            disseminated: disseminated,
-            address: $('#address').text().trim(),
-            documentPath: db.documentsFolder + '/' + moment(disseminated).format('MMMM-Do-YYYY') + '/' + documentID + '.pdf'
-          });
-          downloadDocumentForEntry(db.get(id), callback);
+          try {
+            var disseminated = $('#dateDisseminated').text().trim();
+            var documentID = $('[id="documents.link"] > a').attr('href').split('id=').pop();
+            db.set(id, {
+              name: $('#applicant').text().trim(),
+              documentID: documentID,
+              type: $('[id="type.typeDescription"]').text().trim().toLowerCase(),
+              exParte: $('#exParte').text().trim(),
+              received: $('#dateRcpt').text().trim(),
+              disseminated: disseminated,
+              address: $('#address').text().trim(),
+              documentPath: db.documentsBase + '/' + moment(disseminated).format('MMMM-Do-YYYY') + '/' + documentID + '.pdf'
+            });
+            if ($('[id="type.typeDescription"]').text().trim().toLowerCase() == 'comment') {
+              downloadDocumentForEntry(db.get(id), callback);
+            }
+            else {
+              callback(null);
+            }
+          }
+          catch (e) {
+            console.log(e.message);
+            callback(null);
+          }
         }
       }
       else {

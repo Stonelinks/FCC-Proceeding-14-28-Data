@@ -19,7 +19,12 @@ var read = module.exports.read = function() {
 var _save = module.exports._save = _.throttle(function() {
   console.log('saving db');
   jf.writeFileSync(filename, db);
-}, 2000);
+}, 10000);
+
+var _forceSave = module.exports.forceSave = function() {
+  console.log('force saving db');
+  jf.writeFileSync(filename, db);
+};
 
 var has = module.exports.has = function(id) {
   return db.hasOwnProperty(id);
@@ -38,4 +43,6 @@ var keys = module.exports.keys = function() {
   return Object.keys(db);
 };
 
-var documentsFolder = module.exports.documentsFolder = 'documents';
+var documentsBase = module.exports.documentsBase = 'documents';
+var documentsFolderPdf = module.exports.documentsFolderPdf = documentsBase + '-pdf';
+var documentsFolderText = module.exports.documentsFolderText = documentsBase + '-txt';
