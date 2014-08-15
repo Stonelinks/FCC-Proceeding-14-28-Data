@@ -88,7 +88,8 @@ var processFiling = module.exports.processFiling = function(id, callback) {
               received: $('#dateRcpt').text().trim(),
               disseminated: disseminated,
               address: $('#address').text().trim(),
-              documentPath: db.documentsBase + '/' + moment(disseminated).format('MMMM-Do-YYYY') + '/' + documentID + '.pdf'
+              documentPathPdf: db.documentsFolderPdf + '/' + moment(disseminated).format('MMMM-Do-YYYY') + '/' + documentID + '.pdf',
+              documentPathText: db.documentsFolderText + '/' + moment(disseminated).format('MMMM-Do-YYYY') + '/' + documentID + '.txt'
             });
             if ($('[id="type.typeDescription"]').text().trim().toLowerCase() == 'comment') {
               downloadDocumentForEntry(db.get(id), callback);
