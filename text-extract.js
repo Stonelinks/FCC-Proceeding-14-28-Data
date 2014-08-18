@@ -41,8 +41,6 @@ var notification = _.throttle(function() {
 var extractTextFromDocument = function(id, callback) {
   last = id;
   var entry = db.get(id);
-  var documentPath = entry.documentPath;
-  var documentPathText = textFolder + '/' + moment(entry.disseminated).format('MMMM-Do-YYYY') + '/' + entry.documentID + '.txt';
 
   var _done = function() {
     count++;
@@ -58,19 +56,19 @@ var extractTextFromDocument = function(id, callback) {
   };
 
   var _write = function(text) {
-    fs.ensureDir(path.dirname(documentPathText), function() {
-      fs.writeFile(documentPathText, text, _done);
+    fs.ensureDir(path.dirname(entry.documentPathText), function() {
+      fs.writeFile(entry.documentPathText, text, _done);
     });
   };
 
-  fs.exists(documentPathText, function(exists) {
+  fs.exists(entry.documentPathText, function(exists) {
     if (exists) {
       _done();
     }
-    else if (fs.existsSync(documentPath) && fs.readFileSync(documentPath, 'utf8') !== '') {
-      console.log('extracting text from ' + documentPath);
+    else if (fs.existsSync(entry.documentPathPdf) && fs.readFileSync(entry.documentPathPdf, 'utf8') !== '') {
+      console.log('extracting text from ' + entry.documentPathPdf);
 
-      var text_processor = pdf_extract(documentPath, text_pdf_extract_options, function(err, pages) {
+      var text_processor = pdf_extract(entry.documentPathPdf, text_pdf_extract_options, function(err, pages) {
 
         // inspect(pages, 'extracted text pages');
         if (err) {
@@ -80,9 +78,9 @@ var extractTextFromDocument = function(id, callback) {
           _write(pages.join('\n\n'));
         }
         else {
-          console.log('trying ocr on ' + documentPath);
+          console.log('trying ocr on ' + entry.documentPathPdf);
 
-          var pdf_processor = pdf_extract(documentPath, ocr_pdf_extract_options, function(err, pages) {
+          var pdf_processor = pdf_extract(entry.documentPathPdf, ocr_pdf_extract_options, function(err, pages) {
             if (err) {
               console.dir(err);
             }
