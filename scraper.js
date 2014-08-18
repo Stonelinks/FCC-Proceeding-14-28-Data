@@ -49,7 +49,7 @@ var downloadDocumentForEntry = module.exports.downloadDocumentForEntry = functio
       id: entry.documentID
     }
   }));
-  download(documentURL, entry.documentPath, function() {
+  download(documentURL, entry.documentPathPdf, function() {
     callback(null);
   });
 };
