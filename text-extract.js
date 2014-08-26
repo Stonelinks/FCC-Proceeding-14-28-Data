@@ -1,11 +1,10 @@
-var db = require('./db');
+// var db = require('./db');
 
 var fs = require('fs-extra');
 var _ = require('lodash');
 var moment = require('moment');
 var path = require('path');
 var async = require('async');
-var inspect = require('eyes').inspector({maxLength: 20000});
 var pdf_extract = require('pdf-extract');
 
 var ocr_pdf_extract_options = {
@@ -20,31 +19,20 @@ var text_pdf_extract_options = {
   type: 'text'
 };
 
-// make a backup of everything before trying to do anything
-// console.log('running a backup');
-// console.log(require('exec-sync')('grunt backup'));
-// console.log('done');
+// var count = 0;
+// var total = db.keys().length;
+// var last;
+// var notification = _.throttle(function() {
+  // console.log('progress ' + count + '/' + total + ' (' + (100.0 * count / total).toFixed(2) + '%), last ' + last);
+// }, 400);
 
-var textFolder = db.documentsFolderText;
-// if (fs.existsSync(textFolder)) {
-  // fs.removeSync(textFolder);
-// }
-// fs.mkdirs(textFolder);
-
-var count = 0;
-var total = db.keys().length;
-var last;
-var notification = _.throttle(function() {
-  console.log('progress ' + count + '/' + total + ' (' + (100.0 * count / total).toFixed(2) + '%), last ' + last);
-}, 400);
-
-var extractTextFromDocument = function(id, callback) {
-  last = id;
-  var entry = db.get(id);
+var extractTextFromDocument = module.exports.extractTextFromDocument = function(entry, callback) {
+  // last = id;
+  // var entry = db.get(id);
 
   var _done = function() {
-    count++;
-    notification();
+    // count++;
+    // notification();
     callback(null);
   };
 
@@ -70,7 +58,6 @@ var extractTextFromDocument = function(id, callback) {
 
       var text_processor = pdf_extract(entry.documentPathPdf, text_pdf_extract_options, function(err, pages) {
 
-        // inspect(pages, 'extracted text pages');
         if (err) {
           console.dir(err);
         }
@@ -102,12 +89,7 @@ var extractTextFromDocument = function(id, callback) {
   });
 };
 
-// db.forceSave();
-
-var keys = db.keys().sort();
-// count = 18331;
-// async.eachLimit(keys.slice(keys.indexOf('6017857697')), 1, extractTextFromDocument, function() {
-async.eachLimit(keys, 13, extractTextFromDocument, function() {
-  // db.forceSave();
-  console.log('done');
-});
+// var keys = db.keys().sort();
+// async.eachLimit(keys, 13, extractTextFromDocument, function() {
+  // console.log('done');
+// });

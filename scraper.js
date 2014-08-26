@@ -12,11 +12,19 @@ var moment = require('moment');
 var pass = function() {};
 
 var db = require('./db');
+var text_extract = require('./text-extract');
 
-var download = module.exports.download = function(uri, filename, callback) {
+var download = module.exports.download = function(uri, entry, callback) {
+  var filename = entry.documentPathPdf;
+  var _done = function() {
+    text_extract.extractTextFromDocument(entry, function() {
+      callback(null);
+    });
+  };
+
   if (fs.existsSync(filename)) {
     console.log(filename + ' exists');
-    callback(null);
+    _done();
   }
   else {
     request(uri, function(error, response, html) {
@@ -29,7 +37,7 @@ var download = module.exports.download = function(uri, filename, callback) {
           console.log('saving ' + filename);
           fs.ensureDir(path.dirname(filename), function() {
             request(uri).pipe(fs.createWriteStream(filename)).on('close', function() {
-              callback(null);
+              _done();
             });
           });
         }
@@ -49,7 +57,7 @@ var downloadDocumentForEntry = module.exports.downloadDocumentForEntry = functio
       id: entry.documentID
     }
   }));
-  download(documentURL, entry.documentPathPdf, function() {
+  download(documentURL, entry, function() {
     callback(null);
   });
 };
